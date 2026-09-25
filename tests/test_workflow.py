@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from src.domain import Actor
@@ -32,7 +33,7 @@ class WorkflowTest(unittest.TestCase):
 
     def test_full_workflow(self):
         created = {}
-        steps = [{'op': 'create', 'as': 'unit', 'kind': 'unit', 'data': {'name': 'Reactor-1', 'location': 'Plant-A'}}, {'op': 'create', 'as': 'change', 'kind': 'change', 'data': {'unit_id': '{unit}', 'description': 'Change alarm threshold'}}, {'op': 'transition', 'target': 'change', 'action': 'assess', 'data': {'risk_level': 'medium', 'analyst': 'E-1'}, 'expect': 'assessed'}, {'op': 'transition', 'target': 'change', 'action': 'approve', 'data': {'approvals': ['S-1', 'S-2'], 'permit_id': 'MOC-1'}, 'expect': 'approved'}, {'op': 'transition', 'target': 'change', 'action': 'implement', 'data': {'procedure_version': 'v2'}, 'expect': 'implemented'}, {'op': 'create', 'as': 'item', 'kind': 'action_item', 'data': {'change_id': '{change}', 'description': 'Train operators', 'owner': 'O-1'}}, {'op': 'transition', 'target': 'item', 'action': 'complete', 'data': {'completed_by': 'O-1', 'evidence': 'training-log'}, 'expect': 'completed'}, {'op': 'transition', 'target': 'item', 'action': 'verify', 'data': {'verifier': 'V-1'}, 'expect': 'verified'}, {'op': 'transition', 'target': 'change', 'action': 'commission', 'data': {'tests_passed': True}, 'expect': 'commissioned'}, {'op': 'transition', 'target': 'change', 'action': 'rollback', 'data': {'reason': 'unexpected drift'}, 'expect': 'rolled_back'}]
+        steps = [{'op': 'create', 'as': 'unit', 'kind': 'unit', 'data': {'name': 'Reactor-1', 'location': 'Plant-A'}}, {'op': 'create', 'as': 'change', 'kind': 'change', 'data': {'unit_id': '{unit}', 'description': 'Change alarm threshold'}}, {'op': 'transition', 'target': 'change', 'action': 'assess', 'data': {'risk_level': 'medium', 'analyst': 'E-1'}, 'expect': 'assessed'}, {'op': 'transition', 'target': 'change', 'action': 'approve', 'data': {'approvals': ['S-1', 'S-2'], 'permit_id': 'MOC-1'}, 'expect': 'approved'}, {'op': 'transition', 'target': 'change', 'action': 'implement', 'data': {'procedure_version': 'v2'}, 'expect': 'implemented'}, {'op': 'create', 'as': 'item', 'kind': 'action_item', 'data': {'change_id': '{change}', 'description': 'Train operators', 'owner': 'O-1'}}, {'op': 'transition', 'target': 'item', 'action': 'complete', 'data': {'completed_by': 'O-1', 'evidence': 'training-log'}, 'expect': 'completed'}, {'op': 'transition', 'target': 'item', 'action': 'verify', 'data': {'verifier': 'V-1'}, 'expect': 'verified'}, {'op': 'transition', 'target': 'change', 'action': 'commission', 'data': {'tests_passed': True, 'observation_deadline': (datetime.now(timezone.utc) + timedelta(days=2)).isoformat(timespec='seconds')}, 'expect': 'commissioned'}, {'op': 'transition', 'target': 'change', 'action': 'rollback', 'data': {'reason': 'unexpected drift'}, 'expect': 'rolled_back'}]
         for step in steps:
             if step["op"] == "create":
                 entity = self.service.create(

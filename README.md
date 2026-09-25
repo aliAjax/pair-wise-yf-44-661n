@@ -37,6 +37,17 @@ python3 app.py --db ./data.db --port 8310
 
 请求身份通过`X-User-Id`和`X-Role`请求头传入。创建和动作的可执行角色由规则引擎控制。
 
+## 投用观察
+
+变更投产（`commission`）必须提交`observation_deadline`（观察截止时间，ISO-8601，须晚于当前时间），投产后进入观察期：
+
+- `submit_reading`（engineer/admin）：按采样点登记`sample_point`、`min_limit`/`max_limit`（至少一个）、`value`、`read_at`。超出限值的读数生成顺序异常编号并计入累计异常；同一采样点可重复上报，历次读数全部保留，最新读数用于判断采样点当前状态。
+- `dispose_anomaly`（engineer/admin）：按`anomaly_id`登记`disposition`处置说明，处置后该异常不再阻塞关闭；重复处置返回冲突错误。
+- `close`：`commissioned`状态下只有过了观察截止时间、且无未处置异常时才能关闭，关闭结果写入`data.observation_result`（截止时间、读数总数、异常数、各采样点汇总）。观察期未结束或存在未处置异常时会被拒绝。
+- `rollback`：存在未处置观察异常时仅安全员（safety）可批准回退；无异常时engineer/admin仍可回退。回退后按原流程关闭，不再套用观察关闭限制。
+
+观察数据保存在变更的`data.observation`中（`readings`为历次读数，`summary`为异常汇总），`GET /api/entities/<id>`即可查看。演示页面（`/`）支持一键引导至投产、提交读数、查看异常汇总、登记处置、批准回退和查看关闭结果。
+
 ## 测试
 
 ```bash
