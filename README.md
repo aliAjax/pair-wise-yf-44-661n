@@ -24,7 +24,15 @@ python3 app.py --db ./data.db --port 8310
 
 ## 核心对象
 
-- `unit`：装置运行状态；`change`：变更申请；`action_item`：风险控制行动项。
+- `unit`：装置运行状态；`change`：变更申请；`action_item`：风险控制行动项；`observation`：投用观察采样点。
+
+## 投用观察规则
+
+- `commission`（投产）必须携带`observation_deadline`（ISO时间），作为观察期截止时间。
+- 投产后由工程人员创建`observation`（采样点、限值），通过`report`动作登记读数和读数时间。
+- 同一采样点重复上报会保留全部历史读数；超出限值的读数累计入`exceed_count`，最新读数决定状态（`normal`/`exceeded`）。
+- `exceeded`状态的采样点可用`handle`动作登记处置说明。
+- 观察期未结束或存在未处置异常时，`change`不能`close`；存在未处置异常时，`rollback`只能由安全员执行。
 
 ## 主要接口
 
